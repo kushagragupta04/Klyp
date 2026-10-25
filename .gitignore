@@ -1,0 +1,9 @@
+.vercel
+.env*
+
+# macOS
+.DS_Store
+
+# large local artifacts
+*.pkg
+*.zip
