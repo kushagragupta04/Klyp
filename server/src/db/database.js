@@ -3,9 +3,24 @@ const { DB_NAME } = require("../constants.js");
 
 const connectDB = async () => {
   try {
-    const connectionInstance = await mongoose.connect(
-      `${process.env.MONGO_URI}/${DB_NAME}`
-    );
+    let baseUri = process.env.MONGO_URI;
+    
+    // If URI already has a path after the domain, use it as is
+    // Standard SRV format: mongodb+srv://<user>:<pass>@<cluster>/<db>?<query>
+    const hasDbInUri = baseUri.split("/").length > 3 && baseUri.split("/")[3].split("?")[0].length > 0;
+
+    if (!hasDbInUri) {
+      if (baseUri.includes("?")) {
+        const [uri, query] = baseUri.split("?");
+        baseUri = uri.endsWith("/") ? uri.slice(0, -1) : uri;
+        baseUri = `${baseUri}/${DB_NAME}?${query}`;
+      } else {
+        baseUri = baseUri.endsWith("/") ? baseUri.slice(0, -1) : baseUri;
+        baseUri = `${baseUri}/${DB_NAME}`;
+      }
+    }
+
+    const connectionInstance = await mongoose.connect(baseUri, { serverSelectionTimeoutMS: 15000 });
 
     // console.log(connectionInstance);
     console.log(
